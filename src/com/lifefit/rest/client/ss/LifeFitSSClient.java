@@ -12,7 +12,6 @@ import javax.ws.rs.core.*;
 
 import org.glassfish.jersey.client.ClientConfig;
 
-import com.lifefit.rest.model.Goal;
 import com.lifefit.rest.model.Measure;
 import com.lifefit.rest.model.Person;
 import com.lifefit.rest.util.Transformer;
@@ -23,7 +22,7 @@ public class LifeFitSSClient {
 	static Response response;
 	static String results = null;
 	//RESTFul Web Service URL for LifeFit storage services
-	final String SERVER_URL = "http://localhost:5700/lifefit-ss";
+	final String SERVER_URL = "https://lifefit-ss-181499.herokuapp.com/lifefit-ss";
 	WebTarget service;
 	
 	public LifeFitSSClient(){
@@ -73,19 +72,19 @@ public class LifeFitSSClient {
 		return measureTypes;
 	}
 	
-	public Goal getPersonGoal(int personId){
-		Goal personGoal = null;
+	public Measure[] getMeasureTypesGoal(){
+		Measure[] measureTypes = null;
 		
 		try{
-			response = service.path("person/"+personId+"/goal").request().accept(MediaType.APPLICATION_JSON).get();
-			results = response.readEntity(String.class);
+			response = service.path("measureTypes/goal/list").request().accept(MediaType.APPLICATION_JSON).get();
+			results = response.readEntity(String.class);			
 			//Convert string into inputStream
 			stream = new ByteArrayInputStream(results.getBytes(StandardCharsets.UTF_8));
 			
 			Transformer transform = new Transformer();
-			personGoal = transform.unmarshallJSONGoal(stream);
+			measureTypes = transform.unmarshallJSONMeasureTypes(stream);			
 		}
 		catch(Exception e){e.printStackTrace();}
-		return personGoal;
+		return measureTypes;
 	}
 }

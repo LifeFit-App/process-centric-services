@@ -15,7 +15,6 @@ import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.Path;
 
 import com.lifefit.rest.client.bls.LifeFitBLSClient;
-import com.lifefit.rest.client.ss.LifeFitSSClient;
 import com.lifefit.rest.model.Goal;
 import com.lifefit.rest.model.HealthMeasureHistory;
 import com.lifefit.rest.model.LifeStatus;
@@ -41,20 +40,21 @@ public class PersonCollectionResource {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Goal getPersonGoal(@PathParam("personId") int personId) {
     	
-    	LifeFitSSClient client = new LifeFitSSClient();
+    	LifeFitBLSClient client = new LifeFitBLSClient();
     	
     	Goal personGoal = client.getPersonGoal(personId);
         return personGoal;
     }
     
     @PUT
-    @Path("{personId}/goal")
+    @Path("{personId}/goal/{measureType}")
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response updatePersonGoal(Goal goal, @PathParam("personId") int personId){
+    public Response updatePersonGoal(Goal goal, @PathParam("personId") int personId,
+    		@PathParam("measureType") String measureType){
     	Response res;
     	LifeFitBLSClient client = new LifeFitBLSClient();
     	
-    	if(client.updatePersonGoal(personId, goal)){
+    	if(client.updatePersonGoal(goal, personId, measureType)){
     		res = Response.created(uriInfo.getAbsolutePath()).build();   
     	}
     	else
@@ -76,20 +76,17 @@ public class PersonCollectionResource {
     }
     
     @POST
-    @Path("{personId}/{measureType}")
+    @Path("{personId}/hp/{measureType}")
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response savePersonHealthMeasure(LifeStatus lifeStatus, @PathParam("personId") int personId,
+    public LifeStatus savePersonHealthMeasure(LifeStatus lifeStatus, @PathParam("personId") int personId,
     		@PathParam("measureType") String measureType){
-    	Response res;
+ 
     	LifeFitBLSClient client = new LifeFitBLSClient();
     	
-    	if(client.savePersonHealthMeasure(lifeStatus, personId, measureType)){
-    		res = Response.created(uriInfo.getAbsolutePath()).build();   
-    	}
-    	else
+    	if(!client.savePersonHealthMeasure(lifeStatus, personId, measureType))    	
     		throw new NotFoundException();
     	
-    	return res;
+    	return lifeStatus;
     }
     
     @GET
@@ -99,5 +96,16 @@ public class PersonCollectionResource {
     	LifeFitBLSClient client = new LifeFitBLSClient();
     	Person person = client.authenticateUser(email, pass);
     	return person;
+    }
+    
+    @GET
+    @Path("{personId}/goal/status")
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public String checkDailyGoalStatus(@PathParam("personId") int personId) {
+    	
+    	LifeFitBLSClient client = new LifeFitBLSClient();
+    	
+    	String dailyGoalStatus = client.checkDailyGoalStatus(personId);
+        return dailyGoalStatus;
     }
 }

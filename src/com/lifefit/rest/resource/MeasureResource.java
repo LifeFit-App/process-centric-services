@@ -19,4 +19,14 @@ public class MeasureResource {
         Measure[] measureType = client.getMeasureTypes();
         return measureType;
     }
+    
+    @GET
+    @Path("goal/list")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Measure[] getMeasureTypesGoal() {
+    	LifeFitSSClient client = new LifeFitSSClient();  
+        System.out.println("Getting list of measureTypes Goal...");
+        Measure[] measureType = client.getMeasureTypesGoal();
+        return measureType;
+    }
 }

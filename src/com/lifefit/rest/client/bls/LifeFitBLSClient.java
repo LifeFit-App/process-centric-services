@@ -27,7 +27,7 @@ public class LifeFitBLSClient {
 	static Response response;
 	static String results = null;
 	//RESTFul Web Service URL for LifeFit business logic services
-	final String SERVER_URL = "http://localhost:5800/lifefit-bls";
+	final String SERVER_URL = "https://lifefit-bls-181499.herokuapp.com/lifefit-bls";
 	WebTarget service;
 	
 	public LifeFitBLSClient(){
@@ -44,10 +44,10 @@ public class LifeFitBLSClient {
 		return UriBuilder.fromUri(SERVER_URL).build();
 	}
 	
-	public boolean updatePersonGoal(int personId, Goal goal){		
+	public boolean updatePersonGoal(Goal goal, int personId, String measureType){		
 		int httpStatus = 0;
 		
-		response = service.path("person/"+personId+"/goal").request(MediaType.APPLICATION_JSON)
+		response = service.path("person/"+personId+"/goal/"+measureType).request(MediaType.APPLICATION_JSON)
 					.put(Entity.entity(goal, MediaType.APPLICATION_JSON), Response.class);
 		httpStatus = response.getStatus();
 		
@@ -57,11 +57,11 @@ public class LifeFitBLSClient {
 			return false;
 	}
 	
-	public boolean savePersonHealthMeasure(LifeStatus lifeStatus, int personId, String measureName){
+	public boolean savePersonHealthMeasure(LifeStatus lifeStatus, int personId, String measureType){
 		int httpStatus = 0;
 		
-		response = service.path("person/"+personId+"/hp/"+measureName).request(MediaType.APPLICATION_JSON)
-					.put(Entity.entity(lifeStatus, MediaType.APPLICATION_JSON), Response.class);
+		response = service.path("person/"+personId+"/hp/"+measureType).request(MediaType.APPLICATION_JSON)
+					.post(Entity.entity(lifeStatus, MediaType.APPLICATION_JSON), Response.class);
 		httpStatus = response.getStatus();
 		
 		if(httpStatus == 200 || httpStatus == 201)
@@ -102,5 +102,41 @@ public class LifeFitBLSClient {
 		}
 		catch(Exception e){e.printStackTrace();}
 		return person;
+	}
+	
+	public Goal getPersonGoal(int personId){
+		Goal personGoal = null;
+		
+		try{
+			response = service.path("person/"+personId+"/goal").request().accept(MediaType.APPLICATION_JSON).get();
+			results = response.readEntity(String.class);
+			if(results != null && !results.equalsIgnoreCase("")){
+				//Convert string into inputStream
+				stream = new ByteArrayInputStream(results.getBytes(StandardCharsets.UTF_8));
+				
+				Transformer transform = new Transformer();
+				personGoal = transform.unmarshallJSONGoal(stream);
+			}			
+		}
+		catch(Exception e){e.printStackTrace();}
+		return personGoal;
+	}
+	
+	public String checkDailyGoalStatus(int personId){
+		String dailyGoalStatus = null;
+		
+		try{
+			response = service.path("person/"+personId+"/goal/status").request().accept(MediaType.APPLICATION_JSON).get();
+			results = response.readEntity(String.class);
+			dailyGoalStatus = results.toString();
+		}
+		catch(Exception e){}
+		return dailyGoalStatus;
+	}
+	
+	public static void main(String[] args){
+		LifeFitBLSClient client = new LifeFitBLSClient();
+		
+		System.out.println(client.checkDailyGoalStatus(1));
 	}
 }
